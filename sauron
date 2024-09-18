@@ -1,0 +1,39 @@
+#!/usr/bin/env zsh
+
+#"A Great Eye, lidless, wreathed in flame."
+
+# sauron
+# A simple test watcher.
+
+# Any time it detects a change in the files in or below the current directory, it clears the
+# screen and runs the command provided on the command line.  Useful for running
+# a test suite or building a package on every file change.
+#
+# Currently a little too simple; does not function correctly when adding or
+# deleting files
+
+# USAGE:
+# ./sauron <test command>
+#
+# EXAMPLE:
+# ./sauron bundle exec rspec
+
+echo "Watching..."
+
+if [[ "$OSTYPE" =~ "linux" ]]; then
+  # This requires `inotify-tools`.  You may need to install it:
+  # sudo apt install inotify-tools
+  while inotifywait -rq -e modify .; do
+    clear
+    echo "Building..."
+    $@
+    echo "Build finished."
+  done
+fi
+
+if [[ "$OSTYPE" =~ "darwin".* ]]; then
+  # This requires `entr`.  You may need to install it:
+  # brew install entr
+  COMMAND="clear; echo 'Building...';"$@"; echo 'Build finished.'"
+  find . | entr sh -c $COMMAND
+fi
